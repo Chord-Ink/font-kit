@@ -1,6 +1,6 @@
 [package]
-name = "zed-font-kit"
-version = "0.14.1-zed"
+name = "font-kit"
+version = "0.15.0"
 authors = ["Patrick Walton <pcwalton@mimiga.net>"]
 description = "A cross-platform font loading library"
 license = "MIT OR Apache-2.0"
@@ -8,8 +8,8 @@ readme = "README.md"
 repository = "https://github.com/servo/font-kit"
 homepage = "https://github.com/servo/font-kit"
 exclude = ["resources/**"]
-edition = "2018"
-rust-version = "1.77"
+edition = "2024"
+rust-version = "1.85"
 
 [features]
 default = ["source"]
@@ -51,10 +51,45 @@ dwrote = { version = "0.11", default-features = false }
 version = "0.3"
 features = ["dwrite", "minwindef", "sysinfoapi", "winbase", "winnt"]
 
-[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
-core-foundation = "0.10"
-core-graphics = "0.24"
-core-text = "21.0.0"
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.objc2-core-foundation]
+version = "0.3.2"
+default-features = false
+features = [
+    "std",
+    "CFArray",
+    "CFCGTypes",
+    "CFData",
+    "CFDictionary",
+    "CFNumber",
+    "CFString",
+    "CFURL",
+]
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.objc2-core-graphics]
+version = "0.3.2"
+default-features = false
+features = [
+    "std",
+    "CGBitmapContext",
+    "CGColorSpace",
+    "CGContext",
+    "CGFont",
+    "CGImage",
+    "CGPath",
+]
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.objc2-core-text]
+version = "0.3.2"
+default-features = false
+features = [
+    "std",
+    "objc2-core-graphics",
+    "CTFont",
+    "CTFontCollection",
+    "CTFontDescriptor",
+    "CTFontManager",
+    "CTFontTraits",
+]
 
 [target.'cfg(not(any(target_family = "windows", target_os = "macos", target_os = "ios")))'.dependencies]
 freetype-sys = "0.20"

@@ -10,9 +10,12 @@
 
 //! Defines a set of faces that vary in weight, width or slope.
 
+#[cfg(feature = "source")]
 use crate::error::FontLoadingError;
+#[cfg(feature = "source")]
 use crate::family_handle::FamilyHandle;
 use crate::font::Font;
+#[cfg(feature = "source")]
 use crate::handle::Handle;
 use crate::loader::Loader;
 
@@ -29,6 +32,7 @@ impl<F> Family<F>
 where
     F: Loader,
 {
+    #[cfg(feature = "source")]
     pub(crate) fn from_font_handles<'a, I>(font_handles: I) -> Result<Family<F>, FontLoadingError>
     where
         I: Iterator<Item = &'a Handle>,
@@ -40,6 +44,7 @@ where
         Ok(Family { fonts })
     }
 
+    #[cfg(feature = "source")]
     #[inline]
     pub(crate) fn from_handle(family_handle: &FamilyHandle) -> Result<Family<F>, FontLoadingError> {
         Family::from_font_handles(family_handle.fonts.iter())

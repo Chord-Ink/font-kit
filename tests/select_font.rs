@@ -10,10 +10,15 @@
 
 extern crate font_kit;
 
+#[cfg(feature = "source")]
 use font_kit::error::SelectionError;
+#[cfg(feature = "source")]
 use font_kit::family_name::FamilyName;
+#[cfg(feature = "source")]
 use font_kit::handle::Handle;
+#[cfg(feature = "source")]
 use font_kit::properties::Properties;
+#[cfg(all(feature = "source", target_os = "linux"))]
 use std::ffi::OsStr;
 
 #[cfg(feature = "source")]
@@ -21,7 +26,7 @@ use font_kit::source::SystemSource;
 
 #[cfg(all(feature = "source", any(target_os = "windows", target_os = "macos")))]
 macro_rules! match_handle {
-    ($handle:expr, $path:expr, $index:expr) => {
+    ($handle:expr_2021, $path:expr_2021, $index:expr_2021) => {
         match $handle {
             Handle::Path {
                 ref path,
@@ -49,6 +54,7 @@ macro_rules! match_handle {
     };
 }
 
+#[cfg(all(feature = "source", target_os = "linux"))]
 #[inline(always)]
 fn check_filename(handle: &Handle, filename: &str) {
     match *handle {

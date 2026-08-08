@@ -10,14 +10,20 @@
 
 // General tests.
 
-use font_kit::canvas::{Canvas, Format, RasterizationOptions};
+use font_kit::canvas::RasterizationOptions;
+#[cfg(feature = "source")]
+use font_kit::canvas::{Canvas, Format};
+#[cfg(feature = "source")]
 use font_kit::family_name::FamilyName;
 use font_kit::file_type::FileType;
 use font_kit::font::Font;
 use font_kit::hinting::HintingOptions;
 use font_kit::outline::{Contour, Outline, OutlineBuilder, PointFlags};
+#[cfg(feature = "source")]
 use font_kit::properties::{Properties, Stretch, Weight};
-use pathfinder_geometry::rect::{RectF, RectI};
+#[cfg(feature = "source")]
+use pathfinder_geometry::rect::RectF;
+use pathfinder_geometry::rect::RectI;
 use pathfinder_geometry::transform2d::Transform2F;
 use pathfinder_geometry::vector::{Vector2F, Vector2I};
 use std::fs::File;
@@ -36,18 +42,12 @@ static TEST_FONT_COLLECTION_POSTSCRIPT_NAME: [&str; 2] =
 static FILE_PATH_EB_GARAMOND_TTF: &str = "resources/tests/eb-garamond/EBGaramond12-Regular.ttf";
 static FILE_PATH_INCONSOLATA_TTF: &str = "resources/tests/inconsolata/Inconsolata-Regular.ttf";
 
-#[cfg(not(target_os = "linux"))]
-static KNOWN_SYSTEM_FONT_NAME: &'static str = "Arial";
-#[cfg(target_os = "linux")]
+#[cfg(all(feature = "source", not(target_os = "linux")))]
+static KNOWN_SYSTEM_FONT_NAME: &str = "Arial";
+#[cfg(all(feature = "source", target_os = "linux"))]
 static KNOWN_SYSTEM_FONT_NAME: &str = "DejaVu Sans";
 
-static SFNT_VERSIONS: [[u8; 4]; 4] = [
-    [0x00, 0x01, 0x00, 0x00],
-    [b'O', b'T', b'T', b'O'],
-    [b't', b'r', b'u', b'e'],
-    [b't', b'y', b'p', b'1'],
-];
-
+#[cfg(feature = "source")]
 const OPENTYPE_TABLE_TAG_HEAD: u32 = 0x68656164;
 
 #[cfg(feature = "source")]
@@ -534,7 +534,11 @@ pub fn get_glyph_advance_and_origin() {
         .unwrap();
     let glyph = font.glyph_for_char('a').expect("No glyph for char!");
     assert_eq!(font.advance(glyph), Ok(Vector2F::new(1139.0, 0.0)));
-    assert_eq!(font.origin(glyph), Ok(Vector2F::default()));
+    // Half the advance to the left, and up by roughly the ascent. This used to be zero, because
+    // the `core-text` crate declared `CTFontGetVerticalTranslationsForGlyphs` with an extra
+    // `orientation` parameter that the real function does not take, so the glyph array arrived as
+    // null and Core Text wrote nothing.
+    assert_eq!(font.origin(glyph), Ok(Vector2F::new(-569.0, -1491.0)));
 }
 
 #[cfg(all(
@@ -697,10 +701,12 @@ pub fn rasterize_glyph_bilevel() {
         RasterizationOptions::Bilevel,
     )
     .unwrap();
-    assert!(canvas
-        .pixels
-        .iter()
-        .all(|&value| value == 0 || value == 0xff));
+    assert!(
+        canvas
+            .pixels
+            .iter()
+            .all(|&value| value == 0 || value == 0xff)
+    );
     check_L_shape(&canvas);
 }
 
@@ -734,10 +740,12 @@ pub fn rasterize_glyph_bilevel_offset() {
     )
     .unwrap();
 
-    assert!(canvas
-        .pixels
-        .iter()
-        .all(|&value| value == 0 || value == 0xff));
+    assert!(
+        canvas
+            .pixels
+            .iter()
+            .all(|&value| value == 0 || value == 0xff)
+    );
     check_L_shape(&canvas);
 }
 
@@ -1128,6 +1136,7 @@ fn get_glyph_outline_inconsolata_J() {
 }
 
 // Makes sure that a canvas has an "L" shape in it. This is used to test rasterization.
+#[cfg(feature = "source")]
 #[allow(non_snake_case)]
 fn check_L_shape(canvas: &Canvas) {
     // Find any empty rows at the start.
@@ -1233,6 +1242,7 @@ fn stride_pixel_start(pixels: &[u8]) -> Option<u32> {
     None
 }
 
+#[cfg(feature = "source")]
 fn stripe_width(pixels: &[u8]) -> Option<u32> {
     let mut x = 0;
     // Find the initial empty part.

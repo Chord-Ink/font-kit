@@ -16,7 +16,7 @@ use std::error::Error;
 use std::io;
 
 macro_rules! impl_display {
-    ($enum:ident, {$($variant:pat => $fmt_string:expr),+$(,)* }) => {
+    ($enum:ident, {$($variant:pat => $fmt_string:expr_2021),+$(,)* }) => {
 
         impl ::std::fmt::Display for $enum {
             fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -107,6 +107,6 @@ impl Error for SelectionError {}
 
 impl_display! { SelectionError, {
         NotFound => "no font found",
-        CannotAccessSource { reason: ref maybe_cow } => maybe_cow.as_deref().unwrap_or("failed to access source")
+        CannotAccessSource { reason: maybe_cow } => maybe_cow.as_deref().unwrap_or("failed to access source")
     }
 }

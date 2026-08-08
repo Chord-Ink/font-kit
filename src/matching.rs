@@ -15,9 +15,9 @@ use float_ord::FloatOrd;
 use crate::error::SelectionError;
 use crate::properties::{Properties, Stretch, Style, Weight};
 
-/// This follows CSS Fonts Level 3 § 5.2 [1].
+/// This follows [CSS Fonts Level 3 § 5.2][spec].
 ///
-/// https://drafts.csswg.org/css-fonts-3/#font-style-matching
+/// [spec]: https://drafts.csswg.org/css-fonts-3/#font-style-matching
 pub fn find_best_match(
     candidates: &[Properties],
     query: &Properties,

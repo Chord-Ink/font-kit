@@ -39,7 +39,7 @@ pub(crate) fn lerp(a: f32, b: f32, t: f32) -> f32 {
 
 #[inline]
 pub(crate) fn div_round_up(a: usize, b: usize) -> usize {
-    (a + b - 1) / b
+    a.div_ceil(b)
 }
 
 pub(crate) fn slurp_file(file: &mut File) -> Result<Vec<u8>, IOError> {

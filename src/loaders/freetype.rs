@@ -1208,7 +1208,7 @@ impl FtFixedToF32 for RectI {
     }
 }
 
-extern "C" {
+unsafe extern "C" {
     fn FT_Get_Font_Format(face: FT_Face) -> *const c_char;
     fn FT_Get_BDF_Property(
         face: FT_Face,

@@ -793,13 +793,13 @@ pub fn rasterize_glyph_with_full_hinting() {
         top_row = &canvas.pixels[canvas.stride..(2 * canvas.stride)];
     }
 
-    assert!(top_row.iter().any(|&value| value == 0xff));
+    assert!(top_row.contains(&0xff));
     for y in (0..(canvas.size.y() as usize)).rev() {
         let bottom_row = &canvas.pixels[(y * canvas.stride)..((y + 1) * canvas.stride)];
         if bottom_row.iter().all(|&value| value == 0) {
             continue;
         }
-        assert!(bottom_row.iter().any(|&value| value == 0xff));
+        assert!(bottom_row.contains(&0xff));
         break;
     }
 }
@@ -1232,14 +1232,10 @@ fn check_curly_shape(canvas: &Canvas) {
 // return the first non-zero pixel index
 #[cfg(target_family = "windows")]
 fn stride_pixel_start(pixels: &[u8]) -> Option<u32> {
-    let mut index = 0;
-    for x in pixels {
-        if *x != 0 {
-            return Some(index);
-        }
-        index += 1;
-    }
-    None
+    pixels
+        .iter()
+        .position(|&x| x != 0)
+        .map(|index| index as u32)
 }
 
 #[cfg(feature = "source")]

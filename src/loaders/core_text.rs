@@ -52,8 +52,8 @@ use crate::outline::OutlineSink;
 use crate::properties::{Properties, Stretch, Style, Weight};
 use crate::utils;
 
-const TTC_TAG: [u8; 4] = [b't', b't', b'c', b'f'];
-const OTTO_TAG: [u8; 4] = [b'O', b'T', b'T', b'O'];
+const TTC_TAG: [u8; 4] = *b"ttcf";
+const OTTO_TAG: [u8; 4] = *b"OTTO";
 const OTTO_HEX: u32 = 0x4f54544f; // 'OTTO'
 const TRUE_HEX: u32 = 0x74727565; // 'true'
 const TYP1_HEX: u32 = 0x74797031; // 'typ1'

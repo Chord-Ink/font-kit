@@ -27,6 +27,12 @@ pub struct DirectWriteSource {
     system_font_collection: DWriteFontCollection,
 }
 
+impl Default for DirectWriteSource {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DirectWriteSource {
     /// Opens the system font collection.
     pub fn new() -> DirectWriteSource {
@@ -41,7 +47,7 @@ impl DirectWriteSource {
 
         for dwrite_family in self.system_font_collection.families_iter() {
             for font_index in 0..dwrite_family.get_font_count() {
-                let dwrite_font = dwrite_family.get_font(font_index);
+                let dwrite_font = dwrite_family.font(font_index).unwrap();
                 handles.push(self.create_handle_from_dwrite_font(dwrite_font))
             }
         }
@@ -54,7 +60,7 @@ impl DirectWriteSource {
         Ok(self
             .system_font_collection
             .families_iter()
-            .map(|dwrite_family| dwrite_family.name())
+            .map(|dwrite_family| dwrite_family.family_name().unwrap())
             .collect())
     }
 
@@ -65,13 +71,14 @@ impl DirectWriteSource {
         let mut family = FamilyHandle::new();
         let dwrite_family = match self
             .system_font_collection
-            .get_font_family_by_name(family_name)
+            .font_family_by_name(family_name)
+            .unwrap()
         {
             Some(dwrite_family) => dwrite_family,
             None => return Err(SelectionError::NotFound),
         };
         for font_index in 0..dwrite_family.get_font_count() {
-            let dwrite_font = dwrite_family.get_font(font_index);
+            let dwrite_font = dwrite_family.font(font_index).unwrap();
             family.push(self.create_handle_from_dwrite_font(dwrite_font))
         }
         Ok(family)
@@ -101,9 +108,9 @@ impl DirectWriteSource {
 
     fn create_handle_from_dwrite_font(&self, dwrite_font: DWriteFont) -> Handle {
         let dwrite_font_face = dwrite_font.create_font_face();
-        let dwrite_font_files = dwrite_font_face.get_files();
+        let dwrite_font_files = dwrite_font_face.files().unwrap();
         Handle::Path {
-            path: dwrite_font_files[0].get_font_file_path().unwrap(),
+            path: dwrite_font_files[0].font_file_path().unwrap(),
             font_index: dwrite_font_face.get_index(),
         }
     }

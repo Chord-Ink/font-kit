@@ -180,6 +180,12 @@ impl Font {
     }
 
     /// Creates a font from a native API handle.
+    ///
+    /// # Safety
+    ///
+    /// `freetype_face` must point to a valid FreeType face whose stream has a non-null `read`
+    /// function. Faces opened from memory, such as the one returned by `native_font`, have no
+    /// `read` function and must not be passed.
     pub unsafe fn from_native_font(freetype_face: &NativeFont) -> Font {
         // We make an in-memory copy of the underlying font data. This is because the native font
         // does not necessarily hold a strong reference to the memory backing it.
@@ -187,20 +193,23 @@ impl Font {
         const CHUNK_SIZE: usize = 4096;
         let mut font_data = vec![];
         loop {
-            font_data.extend(iter::repeat(0).take(CHUNK_SIZE));
-            let freetype_stream = (*freetype_face).stream;
-            let n_read = ((*freetype_stream).read)(
-                freetype_stream,
-                font_data.len() as FT_ULong,
-                font_data.as_mut_ptr(),
-                CHUNK_SIZE as FT_ULong,
-            );
+            font_data.extend(iter::repeat_n(0, CHUNK_SIZE));
+            let freetype_stream = unsafe { (*freetype_face).stream };
+            let n_read = unsafe {
+                ((*freetype_stream).read)(
+                    freetype_stream,
+                    font_data.len() as FT_ULong,
+                    font_data.as_mut_ptr(),
+                    CHUNK_SIZE as FT_ULong,
+                )
+            };
             if n_read < CHUNK_SIZE as FT_ULong {
                 break;
             }
         }
 
-        Font::from_bytes(Arc::new(font_data), (*freetype_face).face_index as u32).unwrap()
+        let face_index = unsafe { (*freetype_face).face_index };
+        Font::from_bytes(Arc::new(font_data), face_index as u32).unwrap()
     }
 
     /// Loads the font pointed to by a handle.
@@ -301,7 +310,7 @@ impl Font {
             let mut property = mem::zeroed();
             if FT_Get_BDF_Property(
                 self.freetype_face,
-                "_DEC_DEVICE_FONTNAMES\0".as_ptr() as *const c_char,
+                c"_DEC_DEVICE_FONTNAMES".as_ptr(),
                 &mut property,
             ) != 0
             {
@@ -1030,7 +1039,7 @@ impl Loader for Font {
 
     #[inline]
     unsafe fn from_native_font(native_font: &Self::NativeFont) -> Self {
-        Font::from_native_font(native_font)
+        unsafe { Font::from_native_font(native_font) }
     }
 
     #[inline]
@@ -1152,15 +1161,15 @@ impl Loader for Font {
 }
 
 unsafe fn setup_freetype_face(face: FT_Face) {
-    reset_freetype_face_char_size(face);
+    unsafe { reset_freetype_face_char_size(face) };
 }
 
 unsafe fn reset_freetype_face_char_size(face: FT_Face) {
     // Apple Color Emoji has 0 units per em. Whee!
-    let units_per_em = (*face).units_per_EM as i64;
+    let units_per_em = unsafe { (*face).units_per_EM } as i64;
     if units_per_em > 0 {
         assert_eq!(
-            FT_Set_Char_Size(face, ((*face).units_per_EM as FT_Long) << 6, 0, 0, 0),
+            unsafe { FT_Set_Char_Size(face, ((*face).units_per_EM as FT_Long) << 6, 0, 0, 0) },
             0
         );
     }
